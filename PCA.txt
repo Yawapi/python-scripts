@@ -1,0 +1,52 @@
+#Use PCA to decorrelate, plot decorrelated points, measure Pearson correlation.
+
+# Import PCA
+from sklearn.decomposition import PCA
+
+# Create PCA instance: model
+model = PCA()
+
+# Apply the fit_transform method of model to df
+pca_features = model.fit_transform(df)
+
+# Assign 0th column of pca_features
+xs = pca_features[:,0]
+
+# Assign 1st column of pca_features
+ys = pca_features[:,1]
+
+# Scatter plot 
+plt.scatter(xs, ys)
+plt.axis('equal')
+plt.show()
+
+# Calculate Pearson correlation 
+correlation, pvalue = pearsonr(xs, ys)
+print(correlation)
+
+
+#The first principal component of the data is the direction in which the data varies the most. 
+#Find the first principal component from the dataset and represent it as an arrow on the scatter plot.
+
+# Make a scatter plot of the untransformed points
+plt.scatter(df[:,0], df[:,1])
+
+# Create a PCA instance
+model = PCA()
+
+# Fit model to points
+model.fit(df)
+
+# Get the mean 
+mean = model.mean_
+
+# Get the first principal component
+first_pc = model.components_[0, :]
+
+# Plot first_pc as an arrow, starting at mean
+plt.arrow(mean[0], mean[1], first_pc[0], first_pc[1], color='red', width=0.01)
+
+# Keep axes on same scale
+plt.axis('equal')
+plt.show()
+
