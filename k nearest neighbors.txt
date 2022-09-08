@@ -1,0 +1,145 @@
+# K-nearest neighbors (KNN) for classification and regression. 
+#Input - k closest training examples in data set; output is class membership. 
+# An object belongs to the same class as most of its neighbors by average. 
+# Closest neighbors weighted to contribute more to the average than the more distant ones. 
+# Common weighting scheme consists in giving each neighbor a weight of 1/d, where d is the distance to the neighbor. 
+# Function is approximated locally and all computation is deferred until function evaluation. 
+# Algorithm relies on distance for classification, must normalize training data for accuracy.
+# Can be sensitive to the local structure of the data.
+
+#Create an instance of a k-NN classifier with 6 neighbors and fit to the data. 
+
+# Import KNeighborsClassifier from sklearn.neighbors
+from sklearn.neighbors import KNeighborsClassifier 
+
+# Create arrays for the features and the response variable
+y = df['column'].values
+X = df.drop('column', axis=1).values
+
+# Create a k-NN classifier with 9 neighbors
+knn = KNeighborsClassifier(n_neighbors=9)
+
+# Fit the classifier to the data
+knn.fit(X, y)
+
+# Predict the labels for the training data X: y_pred
+y_pred = knn.predict(X)
+
+# Predict and print the label for the new data point X_new
+new_prediction = knn.predict(X_new)
+print("Prediction: {}".format(new_prediction))
+
+
+
+
+
+
+
+
+
+
+
+
+#Evaluate the performance of binary classifiers by computing a confusion matrix and generating a classification report. Assume that sklearn.model_selection.train_test_split and sklearn.neighbors.KNeighborsClassifier have already been imported, then train a k-NN classifier to the data and evaluate its performance by generating a confusion matrix and classification report.
+
+# Import necessary modules
+from sklearn.metrics import classification_report, confusion_matrix
+
+# Create training and test set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.4, random_state=42) 
+
+# Instantiate a k-NN classifier: knn
+knn = KNeighborsClassifier(n_neighbors=9)
+
+# Fit the classifier to the training data
+knn.fit(X_train, y_train)
+
+# Predict the labels of the test data: y_pred
+y_pred = knn.predict(X_test)
+
+# Generate the confusion matrix and classification report
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+#To tune the n_neighbors parameter of the KNeighborsClassifier() use GridSearchCV on the dataset. Like the alpha parameter of lasso and ridge regularization that you saw earlier, logistic regression also has a regularization parameter: CC. CC controls the inverse of the regularization strength, and this is what you will tune in this exercise. A large CC can lead to an overfit model, while a small CC can lead to an underfit model.
+Use GridSearchCV and logistic regression to find the optimal CC in this hyperparameter space. 
+
+# Import necessary modules
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+
+# Setup the hyperparameter grid
+c_space = np.logspace(-5, 8, 15)
+param_grid = {'C': c_space}
+
+# Instantiate a logistic regression classifier: logreg
+logreg = LogisticRegression()
+
+# Instantiate the GridSearchCV object: logreg_cv
+logreg_cv = GridSearchCV(logreg, param_grid, cv=5)
+
+# Fit it to the data
+logreg_cv.fit(X,y)
+
+# Print the tuned parameters and score
+print("Tuned Logistic Regression Parameters: {}".format(logreg_cv.best_params_)) 
+print("Best score is {}".format(logreg_cv.best_score_))
+
+#GridSearchCV can be computationally expensive, especially if you are searching over a large hyperparameter space and dealing with multiple hyperparameters. A solution to this is to use RandomizedSearchCV, in which not all hyperparameter values are tried out. Instead, a fixed number of hyperparameter settings is sampled from specified probability distributions. 
+#Use a k-NN classifier as part of a pipeline that includes scaling, and for the purposes of comparison, a k-NN classifier trained on the unscaled data has been provided.
+
+# Import the necessary modules
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
+# Setup the pipeline
+steps = [('scaler', StandardScaler()),
+        ('knn', KNeighborsClassifier())]
+        
+# Create the pipeline: pipeline
+pipeline = Pipeline(steps)
+
+# Create train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Fit the pipeline to the training set: knn_scaled
+knn_scaled = pipeline.fit(X_train, y_train)
+
+# Instantiate and fit a k-NN classifier to the unscaled data
+knn_unscaled = KNeighborsClassifier().fit(X_train, y_train)
+
+# Compute and print metrics
+print('Accuracy with Scaling: {}'.format(knn_scaled.score(X_test, y_test)))
+print('Accuracy without Scaling: {}'.format(knn_unscaled.score(X_test, y_test)))
+
+#Full model from above steps
+
+# Setup the pipeline
+steps = [('scaler', StandardScaler()),
+         ('SVM', SVC())]
+
+pipeline = Pipeline(steps)
+
+# Specify the hyperparameter space
+parameters = {'SVM__C':[1, 10, 100],
+              'SVM__gamma':[0.1, 0.01]}
+
+# Create train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=21)
+
+# Instantiate the GridSearchCV object: cv
+cv = GridSearchCV(pipeline, parameters)
+
+# Fit to the training set
+cv.fit(X_train, y_train)
+
+# Predict the labels of the test set: y_pred
+y_pred = cv.predict(X_test)
+
+# Compute and print metrics
+print("Accuracy: {}".format(cv.score(X_test, y_test)))
+print(classification_report(y_test, y_pred))
+print("Tuned Model Parameters: {}".format(cv.best_params_))
+
+
+
+
