@@ -1,0 +1,96 @@
+# Empirical distribution function (empirical Cumulative Distribution Function, ECDF) 
+# The distribution function associated with the empirical measure of a sample. 
+# This cumulative distribution function is a step function that jumps up by 1/n at each of the n data points. 
+# Value at any specified value of measured variable is the fraction of observations of measured variable <= to specified value.
+# Empirical distribution function = estimate of cumulative distribution function that generated points in a sample. 
+# It converges with probability 1 to that underlying distribution (Glivenko–Cantelli theorem). 
+# Many results quantify the rate of convergence of EDF to the underlying cumulative distribution function.
+
+# General fx
+def ecdf(data):
+    """Compute ECDF for a one-dimensional array of measurements."""
+    # Number of data points: n
+    n = len(data)
+    # x-data for the ECDF: x
+    x = np.sort(data)
+    # y-data for the ECDF: y
+    y = np.arange(1, n+1) / n
+    return x, y
+
+# Use ecdf()  
+# ecdf() returns two arrays so must unpack them (ex. x, y = foo(data), for some function foo()).
+
+# Compute ECDF for data: x_data, y_data
+x_data, y_data = ecdf(column)
+
+# Generate plot
+_ = plt.plot(x_data, y_data, marker='.', linestyle='none')
+plt.margins(0.02)
+_ = plt.xlabel ('Measurement')
+_ = plt.ylabel('ECDF')
+
+plt.show()
+
+# Compute ECDFs
+x_data, y_data = ecdf(column)
+x_set, y_set = ecdf(column)
+x_dir, y_dir = ecdf(column)
+
+
+# Plot all ECDFs on the same plot
+_ = plt.plot(x_data, y_data, marker='.', linestyle='none')
+_ = plt.plot(x_set, y_set, marker='.', linestyle='none')
+_ = plt.plot(x_dir, y_dir, marker='.', linestyle='none')
+plt.margins(0.02)
+plt.legend(('data', 'data', 'data'), loc='lower right')
+_ = plt.xlabel('measurement (cm)')
+_ = plt.ylabel('ECDF')
+plt.show()
+
+# Create arrays for features and target variable
+y = df['variable'].values
+X = df['variable'].values
+
+# Print the dimensions of X and Y
+print("Dimensions of Y: {}".format(y.shape))
+print("Dimensions of X: {}".format(X.shape))
+
+# General notes
+
+# Seed random number generator
+np.random.seed(42)
+
+# Compute mean 
+Data_mean = np.mean(data)
+
+# Draw out of an exponential distribution with parameter tau: inter_nohitter_time
+inter_nohitter_time = np.random.exponential(tau, 100000)
+
+# Create an ECDF 
+x, y = ecdf(nohitter_times)
+
+# Create a CDF from theoretical samples: x_theor, y_theor
+x_theor, y_theor = ecdf(inter_nohitter_time)
+
+# Plot the theoretical CDFs
+plt.plot(x_theor, y_theor)
+plt.plot(x, y, marker='.', linestyle='none')
+plt.margins(0.02)
+plt.xlabel('Games between no-hitters')
+plt.ylabel('CDF')
+
+# Take samples with half tau: samples_half
+samples_half = np.random.exponential(tau/2, 10000)
+
+# Take samples with double tau: samples_double
+samples_double = np.random.exponential(2*tau, 10000)
+
+# Generate CDFs from these samples
+x_half, y_half = ecdf(samples_half)
+x_double, y_double = ecdf(samples_double)
+
+# Plot these CDFs as lines
+_ = plt.plot(x_half, y_half)
+_ = plt.plot(x_double, y_double)
+plt.show()
+
