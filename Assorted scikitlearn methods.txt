@@ -1,0 +1,1024 @@
+# Supervised Learning with scikit-learn
+
+#Decision Trees - use RandomizedSearchCV to find optimal hyperparameters.
+
+# Import 
+from scipy.stats import randint
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import RandomizedSearchCV
+
+# Setup the parameters and distributions to sample from
+param_dist = {"max_depth": [3, None],
+              "max_features": randint(1, 9),
+              "min_samples_leaf": randint(1, 9),
+              "criterion": ["gini", "entropy"]}
+
+# Instantiate a Decision Tree classifier
+tree = DecisionTreeClassifier()
+
+# Instantiate the RandomizedSearchCV object
+tree_cv = RandomizedSearchCV(tree, param_dist, cv=5)
+
+# Fit to data
+tree_cv.fit(X,y)
+
+# Print tuned parameters and score
+print("Tuned Decision Tree Parameters: {}".format(tree_cv.best_params_))
+print("Best score is {}".format(tree_cv.best_score_))
+
+#Evaluate a model with tuned hyperparameters on a hold-out set. 
+#scikit-learn does not accept non-numerical features: must binarize categorical variables by creating dummy variables.
+
+# Create dummy variables: df_region
+df_region = pd.get_dummies(df)
+
+# Print the columns of df_region
+print(df_region.columns)
+
+# Drop 'Region_America' from df_region
+df_region = pd.get_dummies(df, drop_first=True)
+
+# Print the new columns of df_region
+print(df_region.columns)
+
+# Use dummy variables to build regression models. 
+# Use ridge regression to perform 5-fold cross-validation.
+
+# Import
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import Ridge
+
+# Instantiate a ridge regressor
+ridge = Ridge(alpha=0.5, normalize=True)
+
+# Perform 5-fold cross-validation
+ridge_cv = cross_val_score(ridge, X, y, cv=5)
+
+# Print cross-validated scores
+print(ridge_cv)
+
+# Pipeline with imputation step and instantiation of a classifier. 
+# Support Vector Machine (SVM) is another type of classifier, with .fit() and .predict()methods as others.
+
+# Import the Imputer module
+from sklearn.preprocessing import Imputer
+from sklearn.svm import SVC
+
+# Setup the Imputation transformer
+imp = Imputer(missing_values='NaN', strategy='most_frequent', axis=0)
+
+# Instantiate the SVC classifier
+clf = SVC()
+
+# Setup the pipeline with the required steps
+steps = [('imputation', imp),
+        ('SVM', clf)]
+
+# Use the pipeline
+
+# Import
+from sklearn.preprocessing import Imputer
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+
+# Setup the pipeline steps
+steps = [('imputation', Imputer(missing_values='NaN', strategy='most_frequent', axis=0)),
+        ('SVM', SVC())]
+
+# Create the pipeline
+pipeline = Pipeline(steps)
+
+# Create training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42) 
+
+# Fit the pipeline to the train set
+pipeline.fit(X_train, y_train)
+
+# Predict the labels of the test set
+y_pred =  pipeline.predict(X_test) 
+
+# Compute metrics
+print(classification_report(y_test, y_pred))
+
+# Scale features to improve model performance (binary features produce minimal impact with scaling). 
+# Scale features and compute mean and standard deviation of unscaled features compared to scaled features.
+
+# Import scale
+from sklearn.preprocessing import scale
+
+# Scale the features
+X_scaled = scale(X)
+
+# Print mean and std of unscaled features
+print("Mean of Unscaled Features: {}".format(np.mean(X))) 
+print("Standard Deviation of Unscaled Features: {}".format(np.std(X)))
+
+# Print mean and std of scaled features
+print("Mean of Scaled Features: {}".format(np.mean(X_scaled))) 
+print("Standard Deviation of Scaled Features: {}".format(np.std(X_scaled)))
+
+# Pipeline to imputes missing data, scales features, fit an ElasticNet to data. 
+# Tune the l1_ratio of your ElasticNet using GridSearchCV.
+
+# Pipeline steps
+steps = [('imputation', Imputer(missing_values='NaN', strategy='mean', axis=0)),
+         ('scaler', StandardScaler()),
+         ('elasticnet', ElasticNet())]
+         
+# Create the pipeline
+pipeline = Pipeline(steps)
+
+# Specify the hyperparameter space
+parameters = {'elasticnet__l1_ratio':np.linspace(0,1,30)}
+
+# Create train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+
+# Create the GridSearchCV object
+gm_cv = GridSearchCV(pipeline, parameters)
+
+# Fit to the training set
+gm_cv.fit(X_train, y_train)
+
+# Compute and print the metrics
+r2 = gm_cv.score(X_test, y_test)
+print("Tuned ElasticNet Alpha: {}".format(gm_cv.best_params_))
+print("Tuned ElasticNet R squared: {}".format(r2))
+
+# General 
+
+# Print summary statistics
+print(df.describe())
+
+# Import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
+# Create the histogram
+plt.hist(df['FTE'].dropna())
+plt.title('Distribution of %full-time \n employee works')
+plt.xlabel('% of full-time')
+plt.ylabel('num employees')
+
+plt.show()
+
+# Define the lambda function: categorize_label
+categorize_label = lambda x: x.astype('category')
+
+# Convert df[LABELS] to a categorical type
+df[LABELS] = df[LABELS].apply(categorize_label, axis=0)
+
+# Print the converted dtypes
+print(df[LABELS].dtypes)
+
+# Import matplotlib.pyplot
+import matplotlib.pyplot as plt
+
+# Calculate number of unique values for each label: num_unique_labels
+num_unique_labels = df[LABELS].apply(pd.Series.nunique)
+
+# Plot number of unique values for each label
+num_unique_labels.plot(kind='bar')
+plt.xlabel('Labels')
+plt.ylabel('Number of unique values')
+
+plt.show()
+
+# Log loss provides a steep penalty for predictions that have a high probability that they were assigned to the incorrect class.
+
+# Compute and print log loss for 1st case
+correct_confident = compute_log_loss(correct_confident, actual_labels)
+print("Log loss, correct and confident: {}".format(correct_confident)) 
+
+# Compute log loss for 2nd case
+correct_not_confident = compute_log_loss(correct_not_confident, actual_labels)
+print("Log loss, correct and not confident: {}".format(correct_not_confident)) 
+
+# Compute and print log loss for 3rd case
+wrong_not_confident = compute_log_loss(wrong_not_confident, actual_labels)
+print("Log loss, wrong and not confident: {}".format(wrong_not_confident)) 
+
+# Compute and print log loss for 4th case
+wrong_confident = compute_log_loss(wrong_confident, actual_labels)
+print("Log loss, wrong and confident: {}".format(wrong_confident)) 
+
+# Compute and print log loss for actual labels
+actual_labels = compute_log_loss(actual_labels, actual_labels)
+print("Log loss, actual labels: {}".format(actual_labels))
+
+# Train models
+# Split data into a training set and a test set. 
+
+# Create the new DataFrame: numeric_data_only
+numeric_data_only = df[NUMERIC_COLUMNS].fillna(-1000)
+
+# Get labels and convert to dummy variables: label_dummies
+label_dummies = pd.get_dummies(df[LABELS])
+
+# Create training and test sets
+X_train, X_test, y_train, y_test = multilabel_train_test_split(numeric_data_only,
+                                                               label_dummies,
+                                                               size=0.2, 
+                                                               seed=123)
+
+# Print the info
+print("X_train info:")
+print(X_train.info())
+print("\nX_test info:")  
+print(X_test.info())
+print("\ny_train info:")  
+print(y_train.info())
+print("\ny_test info:")  
+print(y_test.info())
+
+# Interpreting LogLoss 
+# Score will change depending on number of samples. 
+# Compare score to benchmark model performance (lower number is better).
+
+# Generate predictions: predictions
+predictions = clf.predict_proba(holdout[NUMERIC_COLUMNS].fillna(-1000))
+
+# Format predictions in DataFrame: prediction_df
+prediction_df = pd.DataFrame(columns=pd.get_dummies(df[LABELS]).columns,
+                             index=holdout.index,
+                             data=predictions)
+
+# Save prediction_df to csv
+prediction_df.to_csv('predictions.csv')
+
+# Submit the predictions for scoring: score
+score = score_submission(pred_path='predictions.csv')
+
+# Print score
+print('Your model, trained with numeric data only, yields logloss score: {}'.format(score))
+
+# Tokenization divides a character sequence into pieces called tokens.
+# Determine the sum of 1-grams, 2-grams and 3-grams generated by the df strings tokenized on punctuation.
+# n-gram is a sequence of all ordered subsequences of length n.
+
+# Import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Create the token pattern: TOKENS_ALPHANUMERIC
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Fill missing values in df.Position_Extra
+df.Position_Extra.fillna('', inplace=True)
+
+# Instantiate the CountVectorizer: vec_alphanumeric
+vec_alphanumeric = CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC)
+
+# Fit to the data
+vec_alphanumeric.fit(df.Position_Extra)
+
+# Print the number of tokens and first 15 tokens
+msg = "There are {} tokens in Position_Extra if we split on non-alpha numeric"
+print(msg.format(len(vec_alphanumeric.get_feature_names())))
+print(vec_alphanumeric.get_feature_names()[:15])
+
+# Bag-of-words for text data 
+# Convert text data in each row of df into a single string.
+
+# Define combine_text_columns()
+def combine_text_columns(data_frame, to_drop=NUMERIC_COLUMNS + LABELS):
+    """ converts all text in each row of data_frame to single vector """
+    
+    # Drop non-text columns that are in the df
+    to_drop = set(to_drop) & set(data_frame.columns.tolist())
+    text_data = data_frame.drop(to_drop, axis=1)
+    
+    # Replace nans with blanks
+    text_data.fillna("", inplace=True)
+    
+    # Join all text items in a row that have a space in between
+    return text_data.apply(lambda x: " ".join(x), axis=1)
+
+# Use combine_text_columns to convert all training text data in df to a single vector that can be passed to the vectorizer object and 
+# made into a bag-of-words using the .fit_transform() method.
+
+# Import the CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Create the basic token pattern
+TOKENS_BASIC = '\\S+(?=\\s+)'
+
+# Create the alphanumeric token pattern
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Instantiate basic CountVectorizer: vec_basic
+vec_basic = CountVectorizer(token_pattern=TOKENS_BASIC)
+
+# Instantiate alphanumeric CountVectorizer: vec_alphanumeric
+vec_alphanumeric = CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC)
+
+# Create the text vector
+text_vector = combine_text_columns(df)
+
+# Fit and transform vec_basic
+vec_basic.fit_transform(text_vector)
+
+# Print number of tokens of vec_basic
+print("There are {} tokens in the dataset".format(len(vec_basic.get_feature_names())))
+
+# Fit and transform vec_alphanumeric
+vec_alphanumeric.fit_transform(text_vector)
+
+# Print number of tokens of vec_alphanumeric
+print("There are {} alpha-numeric tokens in the dataset".format(len(vec_alphanumeric.get_feature_names())))
+
+# Instantiate a pipeline that trains using the numeric column of the sample data.
+
+# Import Pipeline
+from sklearn.pipeline import Pipeline
+
+# Import other necessary modules
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
+
+# Split and select numeric data only, no nans 
+X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric']],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=22)
+
+# Instantiate Pipeline object: pl
+pl = Pipeline([
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit the pipeline to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on sample data - numeric, no nans: ", accuracy)
+
+# Imputer transformer replaces NaNs with the mean value of the column. 
+# Pipeline steps are processed sequentially, so make sure tuple encoding preprocessing step is in the right place.
+
+# Import the Imputer object
+from sklearn.preprocessing import Imputer
+
+# Create training and test sets using only numeric data
+X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric', 'with_missing']],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=456)
+
+# Insantiate Pipeline object
+pl = Pipeline([
+        ('imp', Imputer()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit the pipeline to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on sample data - all numeric, incl nans: ", accuracy)
+
+# CountVectorizer() to generate a bag-of-words of the data, 
+# Add a (step, transform) tuple to the steps list in your pipeline.
+# Select only text column(s) for splitting your training and test sets.
+
+
+# Import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Split out only the text data
+X_train, X_test, y_train, y_test = train_test_split(sample_df['text'],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=456)
+
+# Instantiate Pipeline object
+pl = Pipeline([
+        ('vec', CountVectorizer()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on sample data - just text data: ", accuracy)
+
+# FunctionTransformer creates an object with methods to impute numeric data and convert to bag-of-words. 
+
+# Import FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer
+
+# Obtain the text data: get_text_data
+get_text_data = FunctionTransformer(lambda x: x['text'], validate=False)
+
+# Obtain the numeric data: get_numeric_data
+get_numeric_data = FunctionTransformer(lambda x: x[['numeric', 'with_missing']], validate=False)
+
+# Fit and transform the text data: just_text_data
+just_text_data = get_text_data.fit_transform(sample_df)
+
+# Fit and transform the numeric data: just_numeric_data
+just_numeric_data = get_numeric_data.fit_transform(sample_df)
+
+# Print head to check results
+print('Text Data')
+print(just_text_data.head())
+print('\nNumeric Data')
+print(just_numeric_data.head())
+
+# Nesting pipelines using FeatureUnion().
+
+# Import FeatureUnion
+from sklearn.pipeline import FeatureUnion
+
+# Split using ALL data in sample_df
+X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric', 'with_missing', 'text']],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=22)
+
+# Create a FeatureUnion with nested pipeline: process_and_join_features
+process_and_join_features = FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer())
+                ]))
+             ]
+        )
+
+# Instantiate nested pipeline
+pl = Pipeline([
+        ('union', process_and_join_features),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+
+# Fit pl to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on sample data - all data: ", accuracy)
+
+# Use FunctionTransformer on dataset, then instantiate a multiple-datatype pipeline.
+
+# Import FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer
+
+# Get the dummy encoding of the labels
+dummy_labels = pd.get_dummies(df[LABELS])
+
+# Get the columns that are features in the original df
+NON_LABELS = [c for c in df.columns if c not in LABELS]
+
+# Split into training and test sets
+X_train, X_test, y_train, y_test = multilabel_train_test_split(df[NON_LABELS],
+                                                               dummy_labels,
+                                                               0.2, 
+                                                               seed=123)
+
+# Preprocess the text data: get_text_data
+get_text_data = FunctionTransformer(combine_text_columns, validate=False)
+
+# Preprocess the numeric data: get_numeric_data
+get_numeric_data = FunctionTransformer(lambda x: x[NUMERIC_COLUMNS], validate=False)
+
+# Complete pipeline
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer())
+                ]))
+             ]
+        )),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on budget dataset: ", accuracy)
+
+# Swap out logistic-regression model and replace it with a random forest classifier
+# Random forest classifier uses statistics of an ensemble of decision trees to generate predictions.
+
+# Import random forest classifer
+from sklearn.ensemble import RandomForestClassifier
+
+# Edit model step in pipeline
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer())
+                ]))
+             ]
+        )),
+        ('clf', RandomForestClassifier())
+    ])
+
+# Fit to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on budget dataset: ", accuracy)
+
+# Import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+# Add model step to pipeline: pl
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer())
+                ]))
+             ]
+        )),
+        ('clf', RandomForestClassifier(n_estimators=15))
+    ])
+
+# Fit to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on budget dataset: ", accuracy)
+
+# Use alpha-numeric sequences as tokens. 
+# Alpha-numeric tokens contain only letters a-z and numbers 0-9 (tokenizes on punctuation to generate n-gram statistics).
+# CountVectorizer expects a vector,  may need to use combine_text_columns before fitting to the training data.
+
+# Import the CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Create the text vector
+text_vector = combine_text_columns(X_train)
+
+# Create the token pattern
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Instantiate the CountVectorizer
+text_features = CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC)
+
+# Fit text_features to the text vector
+text_features.fit(text_vector)
+
+# Print the first 10 tokens
+print(text_features.get_feature_names()[:10])
+
+# Insert a CountVectorizer instance into pipeline, compute multiple n-gram features for use in model.
+
+# Import pipeline
+from sklearn.pipeline import Pipeline
+
+# Import classifiers
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
+
+# Import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Import other preprocessing modules
+from sklearn.preprocessing import Imputer
+from sklearn.feature_selection import chi2, SelectKBest
+
+# Select 300 best features
+chi_k = 300
+
+# Import functional utilities
+from sklearn.preprocessing import FunctionTransformer, MaxAbsScaler
+from sklearn.pipeline import FeatureUnion
+
+# Perform preprocessing
+get_text_data = FunctionTransformer(combine_text_columns, validate=False)
+get_numeric_data = FunctionTransformer(lambda x: x[NUMERIC_COLUMNS], validate=False)
+
+# Create the token pattern
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Instantiate pipeline
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC,
+                                                   ngram_range=(1, 2))),
+                    ('dim_red', SelectKBest(chi2, chi_k))
+                ]))
+             ]
+        )),
+        ('scale', MaxAbsScaler()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# PolynomialFeatures object in scikit-learn to add interaction (stats tool to determine interaction of two features together in same row).
+# SparseInteractions does the same thing as PolynomialFeatures, but it uses sparse matrices to do so. 
+# PolynomialFeatures and SparseInteractions both take the argument degree for polynomial degree of interaction to compute.
+
+# Instantiate pipeline
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC,
+                                                   ngram_range=(1, 2))),  
+                    ('dim_red', SelectKBest(chi2, chi_k))
+                ]))
+             ]
+        )),
+        ('int', SparseInteractions(degree=2)),
+        ('scale', MaxAbsScaler()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+
+# Hashing using HashingVectorizer 
+# HashingVectorizer acts just like CountVectorizer (can accept token_pattern and ngram_range parameters). 
+# Difference is it creates hash values from text
+
+# Import HashingVectorizer
+from sklearn.feature_extraction.text import HashingVectorizer
+
+# Get text data
+text_data = combine_text_columns(X_train)
+
+# Create the token pattern
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)' 
+
+# Instantiate the HashingVectorizer
+hashing_vec = HashingVectorizer(token_pattern=TOKENS_ALPHANUMERIC)
+
+# Fit and transform the Hashing Vectorizer
+hashed_text = hashing_vec.fit_transform(text_data)
+
+# Create DataFrame and print the head
+hashed_df = pd.DataFrame(hashed_text.data)
+print(hashed_df.head())
+
+# Use HashingVectorizer to replace CountVectorizer step.
+
+# Import the hashing vectorizer
+from sklearn.feature_extraction.text import HashingVectorizer
+
+# Instantiate the winning model pipeline: pl
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', HashingVectorizer(token_pattern=TOKENS_ALPHANUMERIC,
+                                                     non_negative=True, norm=None, binary=False,
+                                                     ngram_range=(1,2))),
+                    ('dim_red', SelectKBest(chi2, chi_k))
+                ]))
+             ]
+        )),
+        ('int', SparseInteractions(degree=2)),
+        ('scale', MaxAbsScaler()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+ 
+# Create a tf-idf word frequency array for a toy collection of documents using TfidfVectorizer from sklearn. 
+# Transforms a list of documents into a word frequency array, output as a csr_matrix. 
+# Has fit()and transform() methods like other sklearn objects.
+
+# Import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Create a TfidfVectorizer
+tfidf = TfidfVectorizer() 
+
+# Apply fit_transform to document
+csr_mat = tfidf.fit_transform(documents)
+
+# Print result of toarray() method
+print(csr_mat.toarray())
+
+# Get the words
+words = tfidf.get_feature_names()
+
+# Print words
+print(words)
+
+# TruncatedSVD performs PCA on sparse arrays in csr_matrix format, such as word-frequency arrays. 
+
+# Imports
+from sklearn.decomposition import TruncatedSVD
+from sklearn.cluster import KMeans
+from sklearn.pipeline import make_pipeline
+
+# Create a TruncatedSVD instance
+svd = TruncatedSVD(n_components=50)
+
+# Create a KMeans instance
+kmeans = KMeans(n_clusters=6)
+
+# Create a pipeline
+pipeline = make_pipeline(svd, kmeans)
+ 
+# Use pipeline to cluster Wikipedia articles.
+
+# Import pandas
+import pandas as pd
+
+# Fit the pipeline to articles
+pipeline.fit(articles)
+# Calculate the cluster labels: labels
+labels = pipeline.predict(articles)
+# Create a DataFrame aligning labels and titles: df
+df = pd.DataFrame({'label': labels, 'article': titles})
+# Display df sorted by cluster label
+print(df.sort_values('label'))
+
+# apply NMF using the tf-idf word-frequency array of Wikipedia articles, given as a csr matrix articles. 
+
+# Import NMF
+from sklearn.decomposition import NMF
+
+# Create an NMF instance: model
+model = NMF(n_components=6)
+
+# Fit the model to articles
+model.fit(articles)
+
+# Transform the articles
+nmf_features = model.transform(articles)
+
+# Print the NMF features
+print(nmf_features)
+
+# Explore NMF features 
+# NMF components represent topics.
+
+# Import pandas
+import pandas as pd
+
+# Create a pandas DataFrame
+df = pd.DataFrame(nmf_features, index=titles)
+
+# Print the row for 'Anne Hathaway'
+print(df.loc['Anne Hathaway'])
+
+# Print the row for 'Denzel Washington'
+print(df.loc['Denzel Washington']
+
+# For NMF applied to documents, components correspond to document topic, NMF features reconstruct the documents from topics. 
+# Identify the topic of the corresponding NMF component.
+
+# Import pandas
+import pandas as pd
+
+# Create a DataFrame
+components_df = pd.DataFrame(model.components_, columns=words)
+
+# Print the shape of the DataFrame
+print(components_df.shape)
+
+# Select row 3
+component = components_df.iloc[3]
+
+# Print result of nlargest
+print(component.nlargest())
+
+# Use NMF to decompose grayscale images into commonly occurring patterns. 
+
+# Import pyplot
+from matplotlib import pyplot as plt
+
+# Select the 0th row
+digit = samples[0,:]
+print(digit)
+
+# Reshape digit to a 13x8 array: bitmap
+bitmap = digit.reshape(13,8)
+print(bitmap)
+
+# Use plt.imshow to display bitmap
+plt.imshow(bitmap, cmap='gray', interpolation='nearest')
+plt.colorbar()
+plt.show()
+
+# Use NMF to decompose the digits dataset. 
+# Digit images are 2D array samples. 
+
+def show_as_image(sample):
+    bitmap = sample.reshape((13, 8))
+    plt.figure()
+    plt.imshow(bitmap, cmap='gray', interpolation='nearest')
+    plt.colorbar()
+    plt.show()
+
+# Import NMF
+from sklearn.decomposition import NMF
+
+# Create an NMF model: model
+model = NMF(n_components=7)
+
+# Apply fit_transform to samples: features
+features = model.fit_transform(samples)
+
+# Call show_as_image on each component
+for component in model.components_:
+    show_as_image(component)
+
+# Assign the 0th row of features: digit_features
+digit_features = features[0,:]
+
+# Print digit_features
+print(digit_features)
+
+# PCA doesn't learn the parts of things so components do not correspond to topics or to parts of images. 
+# Inspect components of a PCA model of images as a 2D array samples. 
+
+# Import PCA
+from sklearn.decomposition import PCA
+
+# Create a PCA instance
+model = PCA(n_components=7)
+
+# Apply fit_transform to samples
+features = model.fit_transform(samples)
+
+# Call show_as_image on each component
+for component in model.components_:
+    show_as_image(component)
+
+# Perform the necessary imports
+import pandas as pd
+from sklearn.preprocessing import normalize
+
+# Normalize the NMF features: norm_features
+norm_features = normalize(nmf_features)
+
+# Create a DataFrame
+df = pd.DataFrame(norm_features, index=titles)
+
+# Select the row corresponding to 'Cristiano Ronaldo': article
+article = df.loc['Cristiano Ronaldo']
+
+# Compute the dot products
+similarities = df.dot(article)
+
+# Display those with the largest cosine similarity
+print(similarities.nlargest())
+
+# Recommendation engine
+
+# Perform the necessary imports. 
+
+from sklearn.decomposition import NMF
+from sklearn.preprocessing import Normalizer, MaxAbsScaler
+from sklearn.pipeline import make_pipeline
+
+# Create a MaxAbsScaler
+scaler = MaxAbsScaler()
+
+# Create an NMF model
+nmf = NMF(n_components=20)
+
+# Create a Normalizer
+normalizer = Normalizer()
+
+# Create a pipeline
+pipeline = make_pipeline(scaler, nmf, normalizer)
+
+# Apply fit_transform to artists
+norm_features = pipeline.fit_transform(artists)
+
+# Create a DataFrame
+df = pd.DataFrame(norm_features, index=artist_names)
+
+# Select row of 'Bruce Springsteen': artist
+artist = df.loc['Bruce Springsteen']
+
+# Compute cosine similarities
+similarities = df.dot(artist)
+
+# Display those with highest cosine similarity
+print(similarities.nlargest())
+
+# Use t-SNE, visualize t-SNE features using a scatter plot. 
+
+# Import TSNE
+from sklearn.manifold import TSNE
+
+# Create a TSNE instance
+model = TSNE(learning_rate=200)
+
+# Apply fit_transform to samples
+tsne_features = model.fit_transform(samples)
+
+# Select the 0th feature
+xs = tsne_features[:,0]
+
+# Select the 1st feature
+ys = tsne_features[:,1]
+
+# Scatter plot, coloring by variety_numbers
+plt.scatter(xs, ys, c=variety_numbers)
+plt.show()
+
+# Apply t-SNE, visualize a scatter plot of the resulting t-SNE features.
+
+# Import TSNE
+from sklearn.manifold import TSNE
+
+# Create a TSNE instance
+model = TSNE(learning_rate=50)
+
+# Apply fit_transform to normalized_movements: tsne_features
+tsne_features = model.fit_transform(normalized_movements)
+
+# Select the 0th feature
+xs = tsne_features[:, 0]
+
+# Select the 1th feature
+ys = tsne_features[:,1]
+
+# Scatter plot
+plt.scatter(xs, ys, alpha=0.5)
+
+# Annotate the points
+for x, y, company in zip(xs, ys, companies):
+    plt.annotate(company, (x, y), fontsize=5, alpha=0.75)
+plt.show()
+
+# Imports
+from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
+
+# Assign the 0th column of grains: width
+width = grains[:, 0]
+
+# Assign the 1st column of grains: length
+length = grains[:, 1]
+# Scatter plot width vs length
+plt.scatter(width, length)
+plt.axis('equal')
+plt.show()
+
+# Calculate the Pearson correlation
+correlation, pvalue = pearsonr(width, length)
+# Display the correlation
+print(correlation)
+
+# Use standardization and clustering pipeline, then create a cross-tabulation to compare the cluster labels.
+
+# Import pandas
+import pandas as pd
+
+# Fit the pipeline to samples
+pipeline.fit(samples)
+
+# Calculate the cluster labels
+labels = pipeline.predict(samples)
+
+# Create a DataFrame with labels and species as columns
+df = pd.DataFrame({'labels': labels, 'species': species})
+
+# Create crosstab
+ct = pd.crosstab(df['labels'], df['species'])
+
+# Display ct
+print(ct)
+
+
+
+
