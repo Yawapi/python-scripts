@@ -1,0 +1,68 @@
+Model validation
+
+# Evaluate models with classification reports and confusion matrices. 
+# ROC curves to evaluate models visually. 
+# scikit-learn classifiers have a .predict_proba() method to return probability of a sample being assigned to a certain class. 
+
+#Build a logistic regression model, and evaluate its performance using a ROC curve. 
+
+# Import modules
+from sklearn.metrics import roc_curve
+
+# Compute predicted probabilities
+y_pred_prob = logreg.predict_proba(X_test)[:,1]
+
+# Generate ROC curve values: fpr, tpr, thresholds
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob) 
+
+# Plot ROC curve
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr, tpr)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.show()
+
+# ROC curve y-axis (True positive rate) aka recall. 
+# Visually evaluate model with precision-recall curve. 
+# Precision and recall:Precision=TPTP+FPPrecision=TPTP+FP; Recall=TPTP+FNRecall=TPTP+FN
+# Binary classifier randomly guessing would be correct 50% of the time, with diagonal line for ROC curve 
+# Random guessing: true and false positive equal, area under ROC curve 0.5. 
+# If AUC greater than 0.5, model is better than random guessing. 
+
+#Calculate AUC scores using the roc_auc_score() function and cross-validation.
+
+# Import 
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_auc_score
+
+# Compute predicted probabilities: y_pred_prob
+y_pred_prob = logreg.predict_proba(X_test)[:,1]
+
+# Compute and print AUC score
+print("AUC: {}".format(roc_auc_score(y_test, y_pred_prob)))
+
+# Compute cross-validated AUC scores: cv_auc
+cv_auc = cross_val_score(logreg, X, y, cv=5, scoring='roc_auc')
+
+# Print list of AUC scores
+print("AUC scores computed using 5-fold cross-validation: {}".format(cv_auc))
+
+# K-Fold CV comparison. 
+# The more folds you use, the more computationally expensive cross-validation becomes. 
+
+# Import
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score
+
+# Create a linear regression object: reg
+reg = LinearRegression()
+
+# Perform 3-fold CV
+cvscores_3 = cross_val_score(reg, X, y, cv = 3)
+print(np.mean(cvscores_3))
+
+# Perform 10-fold CV
+cvscores_10 = cross_val_score(reg, X, y, cv = 10)
+print(np.mean(cvscores_10))
+
